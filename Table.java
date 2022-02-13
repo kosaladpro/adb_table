@@ -1,7 +1,5 @@
 import java.util.*;
 
-import javax.smartcardio.CommandAPDU;
-
 import static java.lang.System.out;
 
 /****************************************************************************************
@@ -200,8 +198,7 @@ public class Table {
         List<Comparable[]> rows = new ArrayList<>();
 
         //  T O   B E   I M P L E M E N T E D
-        for (int i = 0; i < tuples.size(); ++i)
-        {
+        for (int i = 0; i < tuples.size(); ++i) {
             Comparable[] tuple = tuples.get(i);
             Comparable[] row = new Comparable[attrs.length];
             for (int j = 0; j < attrs.length; ++j) {
@@ -229,8 +226,7 @@ public class Table {
 
         //  T O   B E  I M P L E M E N T E D
         Comparable[] tup = index.get(keyVal);
-        if (tup != null)
-        {
+        if (tup != null) {
             rows.add(tup);
         }
         //  I M P L E M E N T E D
@@ -255,22 +251,18 @@ public class Table {
         //  T O   B E   I M P L E M E N T E D
         rows.addAll(tuples);
 
-        for (int i = 0; i < table2.tuples.size(); i++)
-        {
+        for (int i = 0; i < table2.tuples.size(); i++) {
             Comparable[] row2 = table2.tuples.get(i);
             boolean found = false;
-            for (int j = 0; j < tuples.size(); j++)
-            {
+            for (int j = 0; j < tuples.size(); j++) {
                 Comparable[] row1 = tuples.get(j);
 
-                if (Arrays.deepEquals(row1, row2))
-                {
+                if (Arrays.deepEquals(row1, row2)) {
                     found = true;
                     break;
                 }
             }
-            if (!found)
-            {
+            if (!found) {
                 rows.add(row2);
             }
         }
@@ -295,21 +287,17 @@ public class Table {
         List<Comparable[]> rows = new ArrayList<>();
 
         //  T O   B E   I M P L E M E N T E D
-        for (int i = 0; i < tuples.size(); i++)
-        {
+        for (int i = 0; i < tuples.size(); i++) {
             Comparable[] row1 = tuples.get(i);
             boolean matched = false;
-            for (int j = 0; j < table2.tuples.size(); j++)
-            {
+            for (int j = 0; j < table2.tuples.size(); j++) {
                 Comparable[] row2 = table2.tuples.get(j);
-                if (Arrays.deepEquals(row1, row2))
-                {
+                if (Arrays.deepEquals(row1, row2)) {
                     matched = true;
                     break;
                 }
             }
-            if (!matched)
-            {
+            if (!matched) {
                 rows.add(row1);
             }
         }
