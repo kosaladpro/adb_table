@@ -8,6 +8,12 @@ public class CodeRunnerTableTest {
         } else {
             System.out.println("Your \"Equi Join\" method is incomplete or wrong.");
         }
+
+        if (tst.testSelect()) {
+            System.out.println("true");
+        } else {
+            System.out.println("Your \"Select\" method is incomplete or wrong.");
+        }
     }
 
     /**
@@ -69,8 +75,13 @@ public class CodeRunnerTableTest {
     /**
      * Tests the select method.
      */
-//    public boolean testSelect() {
-//    }
+    public boolean testSelect() {
+        Table movie = this.createMovieTable();
+        KeyType keyVal = new KeyType("Star_Wars", 1977);
+        Table selection = movie.select(keyVal);
+
+        return (selection.tuples.size() == 1);
+    }
 
     /**
      * Tests the union method.
