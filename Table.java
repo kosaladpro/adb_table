@@ -1,5 +1,7 @@
 import java.util.*;
 
+import javax.smartcardio.CommandAPDU;
+
 import static java.lang.System.out;
 
 /****************************************************************************************
@@ -200,13 +202,29 @@ public class Table {
         //  T O   B E   I M P L E M E N T E D
         for (int i = 0; i < tuples.size(); ++i) {
             Comparable[] tuple = tuples.get(i);
-            Comparable[] row = new Comparable[attrs.length];
-            for (int j = 0; j < attrs.length; ++j) {
-                String attr = attrs[j];
-                int index = this.col(attr);
-                row[j] = tuple[index];
+            // Comparable[] row = new Comparable[attrs.length];
+            // for (int j = 0; j < attrs.length; ++j) {
+            //     String attr = attrs[j];
+            //     int index = this.col(attr);
+            //     row[j] = tuple[index];
+            // }
+            int equal_count = 0;
+            Comparable[] row = this.extract(tuple, attrs);
+            for (int j = 0; j < rows.size(); j++){
+                Comparable[] prev = rows.get(j);
+                boolean equal_row = true;
+                for (int k = 0; k < row.length; k++) {
+                    if (!prev[k].equals(row[k])){
+                        equal_row = false;
+                        break;
+                    }
+                }
+                if (equal_row){
+                    equal_count++;
+                    break;
+                }
             }
-            rows.add(row);
+            if (equal_count == 0) rows.add(row);
         }
 
         return new Table(name + count++, attrs, colDomain, newKey, rows);

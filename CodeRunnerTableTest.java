@@ -146,6 +146,11 @@ public class CodeRunnerTableTest {
 
         System.out.println(selection.toString());
 
+        KeyType keyVal2 = new KeyType("Star_Wars", 1933);
+        Table selection2 = movie.select(keyVal2);
+
+        System.out.println(selection2.toString());
+
         return true;
     }
 
