@@ -1,5 +1,7 @@
 import java.util.*;
 
+import javax.smartcardio.CommandAPDU;
+
 import static java.lang.System.out;
 
 /****************************************************************************************
@@ -198,6 +200,17 @@ public class Table {
         List<Comparable[]> rows = new ArrayList<>();
 
         //  T O   B E   I M P L E M E N T E D
+        for (int i = 0; i < tuples.size(); ++i)
+        {
+            Comparable[] tuple = tuples.get(i);
+            Comparable[] row = new Comparable[attrs.length];
+            for (int j = 0; j < attrs.length; ++j) {
+                String attr = attrs[j];
+                int index = this.col(attr);
+                row[j] = tuple[index];
+            }
+            rows.add(row);
+        }
 
         return new Table(name + count++, attrs, colDomain, newKey, rows);
     } // project
@@ -214,12 +227,13 @@ public class Table {
 
         List<Comparable[]> rows = new ArrayList<>();
 
-        //  T O   B E   I M P L E M E N T E D
+        //  T O   B E  I M P L E M E N T E D
         Comparable[] tup = index.get(keyVal);
         if (tup != null)
         {
             rows.add(tup);
         }
+        //  I M P L E M E N T E D
 
         return new Table(name + count++, attribute, domain, key, rows);
     } // select
@@ -239,6 +253,28 @@ public class Table {
         List<Comparable[]> rows = new ArrayList<>();
 
         //  T O   B E   I M P L E M E N T E D
+        rows.addAll(tuples);
+
+        for (int i = 0; i < table2.tuples.size(); i++)
+        {
+            Comparable[] row2 = table2.tuples.get(i);
+            boolean found = false;
+            for (int j = 0; j < tuples.size(); j++)
+            {
+                Comparable[] row1 = tuples.get(j);
+
+                if (Arrays.deepEquals(row1, row2))
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                rows.add(row2);
+            }
+        }
+        // I M P L E M E N T E D
 
         return new Table(name + count++, attribute, domain, key, rows);
     } // union
@@ -259,6 +295,25 @@ public class Table {
         List<Comparable[]> rows = new ArrayList<>();
 
         //  T O   B E   I M P L E M E N T E D
+        for (int i = 0; i < tuples.size(); i++)
+        {
+            Comparable[] row1 = tuples.get(i);
+            boolean matched = false;
+            for (int j = 0; j < table2.tuples.size(); j++)
+            {
+                Comparable[] row2 = table2.tuples.get(j);
+                if (Arrays.deepEquals(row1, row2))
+                {
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched)
+            {
+                rows.add(row1);
+            }
+        }
+        // I M P L E M E N T E D
 
         return new Table(name + count++, attribute, domain, key, rows);
     } // minus
@@ -279,10 +334,80 @@ public class Table {
         List<Comparable[]> rows = new ArrayList<>();
 
         //  T O   B E   I M P L E M E N T E D
+        ArrayList<String> common_attr = new ArrayList<String>();
+        common_attr.addAll(Arrays.asList(attribute));
+        common_attr.retainAll(Arrays.asList(table2.attribute));
+
+        String [] all_attribute = null;
+        Class [] all_domain = null;
+
+        if (common_attr.size() == 0) { // no common attributes. get cartesian product
+            all_attribute = ArrayUtil.concat(attribute, table2.attribute);
+            all_domain = ArrayUtil.concat(domain, table2.domain);
+
+            for (int i = 0; i < tuples.size(); i++)
+            {
+                Comparable[] row1 = tuples.get(i);
+                for (int j = 0; j < table2.tuples.size(); j++)
+                {
+                    Comparable[] row2 = table2.tuples.get(j);
+                    rows.add(ArrayUtil.concat(row1, row2));
+                }
+            }
+        }
+        else {// join by common attributes
+            String [] common_attr_array = new String[common_attr.size()];
+            common_attr.toArray(common_attr_array);
+            int[] cols1 = match(common_attr_array);
+            int[] cols2 = table2.match(common_attr_array);
+
+            List<Integer> addcols2 = new ArrayList<Integer>();
+            for (int i = 0; i < table2.attribute.length; i++) addcols2.add(i);
+            for (int i = 0; i < cols2.length; i++) addcols2.remove(cols2[i]);
+
+            all_attribute = new String[attribute.length + addcols2.size()];
+            all_domain = new Class[domain.length + addcols2.size()];
+
+            for (int a1=0; a1 < attribute.length; a1++) {
+                all_attribute[a1] = attribute[a1];
+                all_domain[a1] = domain[a1];
+            }
+            for (int a2=0; a2 < addcols2.size(); a2++) {
+                all_attribute[a2 + attribute.length] = table2.attribute[addcols2.get(a2)];
+                all_domain[a2 + attribute.length] = table2.domain[addcols2.get(a2)];
+            }
+
+            for (int t1 = 0; t1 < tuples.size(); t1++) {
+                Comparable[] row1 = tuples.get(t1);
+                for (int t2 = 0; t2 < table2.tuples.size(); ++t2) {
+                    Comparable[] row2 = table2.tuples.get(t2);
+                    boolean attrsValuesEqual = true;
+                    for (int c = 0; c < common_attr.size(); c++) {
+                        Comparable val1 = row1[cols1[c]];
+                        Comparable val2 = row2[cols2[c]];
+                        if (!val1.equals(val2)) {
+                            attrsValuesEqual = false;
+                            break;
+                        }
+                    }
+
+                    if (attrsValuesEqual) {
+                        Comparable[] row = new Comparable[row1.length + addcols2.size()];
+                        for (int c1 = 0; c1 < row1.length; c1++) {
+                            row[c1] = row1[c1];
+                        }
+                        for (int c2 = 0; c2 < addcols2.size(); c2++) {
+                            row[row1.length + c2] = row2[addcols2.get(c2)];
+                        }
+                        rows.add(row);
+                    }
+                }
+            }
+        }
+        // I M P L E M E N T E D
 
         // FIX - eliminate duplicate columns
-        return new Table(name + count++, ArrayUtil.concat(attribute, table2.attribute),
-                ArrayUtil.concat(domain, table2.domain), key, rows);
+        return new Table(name + count++, all_attribute, all_domain, key, rows);
     } // join
 
     /************************************************************************************
@@ -445,4 +570,28 @@ public class Table {
         return obj;
     } // extractDom
 
+    public String toString(){
+        StringBuilder builder = new StringBuilder();
+        builder.append("----------------------------------------------------------------------------------------------------\n");
+        builder.append(name + "\n-\n");
+        builder.append(this.listToString(Arrays.asList(attribute)));
+        builder.append("\n");
+        for (int i = 0; i < tuples.size(); ++i){
+            builder.append(this.listToString(Arrays.asList(tuples.get(i))));
+            builder.append("\n");
+        }
+        builder.append("----------------------------------------------------------------------------------------------------\n");
+        return builder.toString();
+    }
+
+    public String listToString(List list) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < list.size(); ++i){
+            if (i != 0) {
+                builder.append(",\t");
+            }
+            builder.append(list.get(i).toString());
+        }
+        return builder.toString();
+    }
 } // Table class
